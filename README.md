@@ -1,105 +1,117 @@
 # comfyui-skill-public
 
-Portable ComfyUI workflow + API guidance for unknown or mixed environments.
+> **Control ComfyUI with natural language — directly from OpenClaw.**
 
-This repository packages an OpenClaw-ready skill that helps agents and users build, validate, troubleshoot, and run ComfyUI workflows without assuming machine-specific paths, model inventories, GPUs, or custom node sets.
+Build workflows, queue batch jobs, generate images, and debug graphs without ever leaving chat. No hardcoded paths. No machine-specific assumptions. Works across local, remote, and cloud ComfyUI installs.
 
-## What this skill is
+---
 
-`comfyui-skill-public` is a **discovery-first ComfyUI operations skill**. It is designed to:
+## What you can do with this skill
 
-- Work across local, remote, and cloud ComfyUI installs
-- Discover node/model capabilities from the target server (`/object_info`) before workflow authoring
-- Prevent cross-family graph mistakes (SDXL, FLUX, WAN, LTX)
-- Guide API submission, queue monitoring, history parsing, and output retrieval
-- Keep setup facts user-owned and separate from reusable guidance
+Once installed, your OpenClaw agent can handle ComfyUI end-to-end through conversation:
+
+- **Generate images from chat** — describe what you want and the agent builds and submits the workflow
+- **Create and modify workflows with natural language** — no manual JSON editing required
+- **Queue batch jobs** — run prompt sweeps, campaign sets, or variant batches and monitor them in real time
+- **Auto-discover your install** — the skill queries your live ComfyUI server before authoring anything, so it always works with what you actually have installed
+- **Troubleshoot broken graphs** — paste an error, get a diagnosis and a fix
+- **Add LoRAs, swap models, chain nodes** — describe the change and the agent handles the graph surgery
+- **Validate before you run** — compatibility checks catch SDXL/FLUX/WAN family mismatches before they waste GPU time
+
+This skill is designed to be **portable**. The same workflow works whether you're running ComfyUI on your local desktop, a remote server, or a cloud deployment.
+
+---
+
+## Getting started
+
+1. Clone or download this repo and drop it into your OpenClaw skills environment as `comfyui-skill-public`
+2. Open `SKILL.md` — it defines the trigger scope and routing behavior for your agent
+3. For a fresh install, start with `references/setup.md` — it walks through first-time server discovery
+4. Collect your install-specific values (base URL, model names, etc.) using `references/config-template.md`
+5. Start talking to your agent
+
+The skill discovers everything it needs from your live server via the ComfyUI API — it never assumes what models, nodes, or custom extensions you have.
+
+---
+
+## Key use cases
+
+### 🖼 Image generation from chat
+Ask your agent to generate an image. It builds the workflow, submits it, monitors the queue, and returns the output — all from a single prompt.
+
+### 🔁 Batch jobs and variant sweeps
+Queue large sets of prompts for campaign generation, A/B style testing, or LoRA comparison runs. Monitor progress and retrieve outputs without touching the UI.
+
+### 🔧 Workflow authoring and repair
+Describe the graph you want or paste a broken one. The agent constructs, validates, and corrects it — checking node availability and model compatibility first.
+
+### 🎨 LoRA testing and iteration
+Systematically test LoRA combinations at conservative strengths. Useful for tuning loops, style comparisons, and archviz/character consistency workflows.
+
+### 🚀 Remote and cloud deployments
+One skill, any ComfyUI instance. No hardcoded paths or local assumptions — connect to a remote host or cloud GPU and it just works.
+
+---
 
 ## Repository layout
 
-- `SKILL.md` — trigger scope, routing, global rules
-- `references/setup.md` — startup/onboarding flow for unknown installs
-- `references/api.md` — REST/WebSocket API usage pattern
-- `references/workflow-patterns.md` — graph construction and validation patterns
-- `references/models.md` — family-specific model guidance
-- `references/compatibility.md` — mismatch prevention checks
-- `references/lora.md` — LoRA compatibility and tuning guidance
-- `references/graph-conventions.md` — graph hygiene and debugging checklist
-- `references/config-template.md` — user-owned setup record template
-- `references/prompting.md` — portable prompting guidance
+```
+comfyui-skill-public/
+├── SKILL.md                        # Trigger scope, routing, global rules
+└── references/
+    ├── setup.md                    # First-time onboarding for unknown installs
+    ├── api.md                      # REST/WebSocket API usage patterns
+    ├── workflow-patterns.md        # Graph construction and validation
+    ├── models.md                   # Family-specific model guidance
+    ├── compatibility.md            # Mismatch prevention checks
+    ├── lora.md                     # LoRA compatibility and tuning
+    ├── graph-conventions.md        # Graph hygiene and debugging checklist
+    ├── config-template.md          # User-owned setup record template
+    └── prompting.md                # Portable prompting guidance
+```
 
-## Quick start
+---
 
-1. Copy this skill into your skills environment and expose it as `comfyui-skill-public`.
-2. Open `SKILL.md` and follow the trigger scope/routing behavior.
-3. For first-time setup on a target server, start with `references/setup.md`.
-4. Collect only the minimum required user facts, then discover capabilities from the ComfyUI API:
-   - `GET /object_info`
-   - `POST /prompt`
-   - `GET /queue`
-   - `GET /history` or `GET /history/{prompt_id}`
-   - WebSocket `/ws` (when available)
-5. Store install-specific values in a user-owned config based on `references/config-template.md`.
+## ComfyUI API endpoints used
 
-## Trigger examples
+| Endpoint | Purpose |
+|---|---|
+| `GET /object_info` | Discover available nodes and their inputs |
+| `POST /prompt` | Submit a workflow to the queue |
+| `GET /queue` | Monitor queue state |
+| `GET /history/{prompt_id}` | Retrieve run results and output metadata |
+| `WS /ws` | Real-time queue and progress events |
 
-Use this skill for prompts like:
+---
 
-- "Build a ComfyUI workflow"
-- "Fix this ComfyUI workflow"
-- "Use the ComfyUI API"
-- "Why is this ComfyUI graph failing?"
-- "Add a LoRA / model / node to this ComfyUI setup"
-- "Adapt this graph to my remote ComfyUI instance"
+## Troubleshooting
 
-## Common troubleshooting
+**Missing node class errors**
+Check `GET /object_info` for the required class. If it's absent, the custom node isn't installed on the target server. The agent will stop early and report exactly what's missing.
 
-### 1) Missing node class errors
-- Re-check `GET /object_info` for required node classes.
-- Confirm needed custom nodes are installed on the target server.
-- Stop early and report exactly which class is missing.
+**Model or LoRA not found**
+Filename and dropdown values are discovered from your live install — the skill never assumes your model inventory. Verify the exact filename matches what's on disk.
 
-### 2) Model or LoRA filename not found
-- Confirm dropdown values from the target install (do not assume local inventory).
-- Verify model family compatibility (e.g., LoRA training family vs base model family).
+**Workflow submits but fails mid-run**
+Validate encoder/VAE/scheduler compatibility for your model family. Check `GET /history/{prompt_id}` for the concrete error. The agent can reduce the graph to the smallest failing component and rebuild from there.
 
-### 3) Workflow submits but fails during run
-- Validate encoder/VAE/scheduler compatibility for the selected model family.
-- Check `GET /history/{prompt_id}` and queue state for concrete failure reason.
-- Reduce to smallest failing graph and reintroduce components incrementally.
+**Output retrieval issues**
+Outputs are resolved from history metadata, not hardcoded paths. For hosted deployments where `/view` is unavailable, use the platform-specific output mechanism.
 
-### 4) Output retrieval issues
-- Resolve outputs from history metadata instead of hardcoded filesystem paths.
-- If `/view` is unavailable in a hosted deployment, use the platform-specific output path mechanism.
+**Remote or cloud connectivity**
+Confirm base URL and WebSocket URL are reachable. In environments where WebSocket is unavailable, the skill falls back to polling queue/history.
 
-### 5) Remote/cloud connectivity issues
-- Confirm base URL and websocket URL are correct and reachable.
-- Handle environments where WebSocket is unavailable by polling queue/history.
+---
 
-## Why this is useful
+## Security notes
 
-### Batch jobs
-- Queue large prompt sets and monitor run progress reliably.
-- Useful for campaign generation, variant sweeps, and throughput workflows.
+- Absolute filesystem paths are never embedded in reusable workflows
+- Install-specific values live in user-owned config, not in skill defaults
+- Secrets and API tokens are never stored in skill docs or workflow JSON
+- Capabilities are always validated from live install data before submitting expensive jobs
 
-### Workflow testing/regression checks
-- Validate the same workflow across upgrades/custom-node changes.
-- Catch breakages early by confirming node/model availability before submit.
-
-### LoRA iteration and dataset workflows
-- Systematically test LoRA combinations with conservative strengths.
-- Useful for model tuning loops and comparing style/performance consistency.
-
-### Portable automation
-- One process works across local desktop ComfyUI, remote hosts, and cloud deployments.
-- Reduces failure from hardcoded assumptions and machine-specific graph logic.
-
-## Security and privacy posture
-
-- Avoid absolute filesystem paths in reusable workflows.
-- Treat install-specific values as user-owned config, not skill defaults.
-- Do not embed secrets/tokens in skill docs or workflow JSON.
-- Validate requirements from live install data before running expensive jobs.
+---
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE)
