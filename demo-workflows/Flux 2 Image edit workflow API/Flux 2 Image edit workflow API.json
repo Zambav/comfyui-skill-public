@@ -320,7 +320,7 @@
   "225": {
     "inputs": {
       "image_output": "Save",
-      "output_path": "Z:\\Blended\\Scenes\\Knighted Mountain\\Ai upscaled batch",
+      "output_path": "output",
       "save_prefix": "ComfyUI",
       "number_padding": 5,
       "file_type": "jpg",

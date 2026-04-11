@@ -35,8 +35,8 @@ Build workflows, queue batch jobs, generate images and videos, debug graphs, and
 
 1. Clone or download this repo into your OpenClaw skills environment as `comfyui-skill-public`
 2. Open `SKILL.md` — it defines the trigger scope and routing behavior for your agent
-3. For a fresh install, start with `references/setup.md`
-4. Collect your install-specific values using `references/config-template.md`
+3. For a fresh install, start with `setup.md`
+4. Collect your install-specific values using `config-template.md`
 5. Install dependencies from `dependencies.md` (ComfyUI, Python packages, JoyCaption)
 6. Start talking to your agent
 
