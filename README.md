@@ -1,8 +1,18 @@
+<img src="https://github.com/user-attachments/assets/84afcb4f-a7de-4070-9bca-ccb526bb526d" alt="Comfy UI + OpenClaw header" width="100%">
+
 # comfyui-skill-public
 
-> **Control ComfyUI with natural language — directly from your AI agent.**
+> **Talk to ComfyUI in natural language — beginner friendly from day one.**
 
-Build workflows, queue batch jobs, generate images and videos, debug graph failures, and run a full LoRA training pipeline from chat. This repo is portable by design: no hardcoded paths, no machine-specific assumptions, and no fixed model inventory.
+You can now batch jobs and talk to ComfyUI in plain English from your AI agent. Instead of hand-editing JSON workflows, you can describe what you want and let the agent build, queue, and monitor the run for you.
+
+Examples you can ask for:
+- "batch this entire image folder into images and make up the prompts"
+- "joycaption my entire image library so we can use it to prompt enhancements accurately"
+- "take this product-photo folder and generate clean white-background variants"
+- "turn this storyboard folder into short cinematic clips with matching prompts"
+- "upscale this entire folder to 4K and keep the original filenames"
+- "in Discord, make me an image and post it there for free"
 
 ---
 
