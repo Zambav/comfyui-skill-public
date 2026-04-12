@@ -42,8 +42,9 @@ Examples you can ask for:
 1. Clone this repo into your skills environment as `comfyui-skill-public`
 2. Read `SKILL.md` to understand trigger scope and routing
 3. For unknown installs, complete onboarding in `setup.md`
-4. Install runtime dependencies from `dependencies.md`
-5. Start issuing ComfyUI tasks to your agent
+4. Choose a model prompt guide from `prompting-guides/README.md`
+5. Install runtime dependencies from `dependencies.md`
+6. Start issuing ComfyUI tasks to your agent
 
 ---
 
@@ -118,6 +119,7 @@ comfyui-skill-public/
 ├── models.md
 ├── dependencies.md
 ├── prompting-guides/
+│   ├── README.md
 │   ├── general-prompting-guide.md
 │   ├── ltx-2.3-prompting-guide.md
 │   ├── flux-2-prompting-guide.md

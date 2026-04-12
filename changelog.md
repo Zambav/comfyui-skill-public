@@ -5,12 +5,15 @@
 ### Added
 - **prompting-guides/flux-2-prompting-guide.md** — FLUX 2 prompt structure, model-aware best practices, and troubleshooting patterns
 - **prompting-guides/wan-2.2-prompting-guide.md** — WAN 2.2 video prompting methodology, temporal sequencing, and motion/camera guidance
+- **prompting-guides/README.md** — Prompt guide index table (model, use-case, link, last-updated)
 
 ### Changed
 - Migrated prompting docs into **prompting-guides/** folder for centralized model-specific guidance
 - Moved `prompting.md` to `prompting-guides/general-prompting-guide.md`
 - Moved `prompting-guide-ltx.md` to `prompting-guides/ltx-2.3-prompting-guide.md`
 - Updated internal references in `SKILL.md`, `README.md`, and `dependencies.md` to new prompting guide paths
+- Added “which guide to use” decision flow in `SKILL.md`
+- Expanded `setup.md` with first-time control readiness checks and setup completion criteria
 
 ## v1.1.0
 
