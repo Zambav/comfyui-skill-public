@@ -8,6 +8,12 @@ Confirm actual model filenames from the target install before building the graph
 
 ## Common families
 
+Prompting guides:
+- General -> [`prompting-guides/general-prompting-guide.md`](prompting-guides/general-prompting-guide.md)
+- FLUX 2 -> [`prompting-guides/flux-2-prompting-guide.md`](prompting-guides/flux-2-prompting-guide.md)
+- WAN 2.2 -> [`prompting-guides/wan-2.2-prompting-guide.md`](prompting-guides/wan-2.2-prompting-guide.md)
+- LTX 2.3 -> [`prompting-guides/ltx-2.3-prompting-guide.md`](prompting-guides/ltx-2.3-prompting-guide.md)
+
 ### SDXL-style checkpoint workflows
 - Often use `CheckpointLoaderSimple`-style loaders.
 - Usually bundle model/CLIP/VAE behavior differently from diffusion-model-only families.

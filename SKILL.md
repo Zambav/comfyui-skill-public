@@ -33,7 +33,9 @@ Before writing or editing any workflow:
 ## Read path by task
 
 - Setup / first run / portability questions -> [setup.md](setup.md)
-- LTX 2.3 video or image-to-video generation -> [prompting-guide-ltx.md](prompting-guide-ltx.md)
+- LTX 2.3 video or image-to-video generation -> [prompting-guides/ltx-2.3-prompting-guide.md](prompting-guides/ltx-2.3-prompting-guide.md)
+- FLUX 2 image generation/edit prompting -> [prompting-guides/flux-2-prompting-guide.md](prompting-guides/flux-2-prompting-guide.md)
+- WAN 2.2 video prompting -> [prompting-guides/wan-2.2-prompting-guide.md](prompting-guides/wan-2.2-prompting-guide.md)
 - Batch jobs with state tracking and recovery -> [batch-operations.md](batch-operations.md)
 - FLUX image edit nodes, LTX video nodes, api_lib reference -> [reference-implementations.md](reference-implementations.md)
 - Demo workflow JSON files (FLUX image edit, LTX video) -> [demo-workflows/](demo-workflows/) — **for demonstration only; replace with your own workflows**
@@ -41,7 +43,7 @@ Before writing or editing any workflow:
 - API submission / queue / history / WebSocket -> [api.md](api.md)
 - Programmatic graph building, compatibility checks, and debugging -> [workflow-patterns.md](workflow-patterns.md)
 - Model-family requirements and LoRA loading/training guidance -> [models.md](models.md)
-- Prompt construction (general) -> [prompting.md](prompting.md)
+- Prompt construction (general) -> [prompting-guides/general-prompting-guide.md](prompting-guides/general-prompting-guide.md)
 - Release history -> [changelog.md](changelog.md)
 
 ## Global operating rules

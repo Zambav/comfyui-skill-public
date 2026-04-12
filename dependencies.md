@@ -70,7 +70,7 @@ JoyCaption (CPU)
     ↓
 captions.txt  (raw, permanent, never modified)
     ↓
-LLM reads captions.txt + prompting-guide-ltx.md
+LLM reads captions.txt + prompting-guides/ltx-2.3-prompting-guide.md
     ↓
 ltx_video_prompts.json  (versioned, per-image prompts)
     ↓
@@ -107,7 +107,7 @@ Check `/object_info` for the specific node class names to confirm availability b
 Any LLM capable of following the prompting guide can generate cinematic prompts from JoyCaption descriptions. No specific provider required.
 
 Requirements:
-- Reads: `prompting-guide-ltx.md` + `captions.txt`
+- Reads: `prompting-guides/ltx-2.3-prompting-guide.md` + `captions.txt`
 - Writes: `ltx_video_prompts.json` (one prompt per image)
 - Follows the negative prompt standard: `"avoid locked-off static frame as sole camera behaviour, frozen motion, still photography, cartoonish"`
 

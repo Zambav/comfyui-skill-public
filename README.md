@@ -87,7 +87,7 @@ For training and compatibility details, see `models.md`.
 ```text
 JoyCaption -> captions.txt (raw scene descriptions, never modified)
       ↓
-LLM reads captions.txt + prompting-guide-ltx.md
+LLM reads captions.txt + prompting-guides/ltx-2.3-prompting-guide.md
       ↓
 ltx_video_prompts.json (versioned, unique prompt per image)
       ↓
@@ -117,8 +117,11 @@ comfyui-skill-public/
 ├── workflow-patterns.md
 ├── models.md
 ├── dependencies.md
-├── prompting.md
-├── prompting-guide-ltx.md
+├── prompting-guides/
+│   ├── general-prompting-guide.md
+│   ├── ltx-2.3-prompting-guide.md
+│   ├── flux-2-prompting-guide.md
+│   └── wan-2.2-prompting-guide.md
 ├── batch-operations.md
 ├── reference-implementations.md
 ├── demo-workflows/
