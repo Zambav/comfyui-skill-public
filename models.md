@@ -28,6 +28,50 @@ Confirm actual model filenames from the target install before building the graph
 - Confirm text encoder and scheduler expectations from the target install.
 - Validate whether the install uses checkpoint-style loading, dedicated LTX loaders, or both.
 
+## LoRA loading + training pipeline
+
+### Core LoRA rule
+
+Treat every LoRA as family-specific until proven otherwise.
+
+### Before loading a LoRA
+
+Confirm:
+- the LoRA filename exists on the target install
+- the target base model family matches the LoRA's training family
+- the graph uses the correct loader path for that family
+- any text-encoder-side LoRA behavior is supported by the nodes on the install
+
+### Portable instruction pattern
+
+Say:
+- "Confirm the available LoRAs from the install"
+- "Verify this LoRA was trained for the selected base model family"
+- "Apply conservative strengths first, then tune"
+
+Do not say:
+- "Use my local favorite LoRA"
+- "Assume this named LoRA exists"
+
+### Stacking
+
+When stacking multiple LoRAs:
+- add them one at a time
+- keep strengths conservative initially
+- test for shape/key mismatches after each addition
+
+### LoRA training pipeline scope
+
+The LoRA training pipeline can include JoyCaption capabilities and dynamic prompting alongside model training.
+
+Agent role for LoRA training requests:
+- helps structure the dataset folder
+- configures training parameters
+- uses JoyCaption capabilities to produce source descriptions when needed
+- applies dynamic prompting to generate prompt variants for stronger coverage
+- manages checkpoint output
+- deploys trained LoRA checkpoints to ComfyUI
+
 ## Required checks for any family
 
 For the chosen family, confirm:

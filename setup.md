@@ -30,7 +30,37 @@ Suggested order:
 
 ## Portable setup record
 
-Keep install-specific values in a separate user-owned note or config derived from [config-template.md](config-template.md), for example:
+Keep install-specific values in a user-owned setup record. Do not hardcode them into skill defaults.
+
+### Portable config template
+
+```yaml
+comfyui:
+  base_url: http://127.0.0.1:8188
+  websocket_url: ws://127.0.0.1:8188/ws
+  install_type: local   # local | remote | cloud
+  version_notes: ""
+  custom_nodes:
+    - name: ""
+      purpose: ""
+  model_aliases:
+    image_default: ""
+    video_default: ""
+    flux_default: ""
+    wan_default: ""
+    ltx_default: ""
+  output_rules:
+    default_subfolder: ""
+    filename_prefix: ""
+  hardware:
+    gpu: ""
+    vram_gb: ""
+    notes: ""
+```
+
+Replace example defaults with the user's real environment before relying on them.
+
+Track at minimum:
 - host/base URL
 - known custom nodes
 - approved model aliases
