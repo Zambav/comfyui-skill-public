@@ -42,8 +42,9 @@ Examples you can ask for:
 1. Clone this repo into your skills environment as `comfyui-skill-public`
 2. Read `SKILL.md` to understand trigger scope and routing
 3. For unknown installs, complete onboarding in `setup.md`
-4. Install runtime dependencies from `dependencies.md`
-5. Start issuing ComfyUI tasks to your agent
+4. Choose a model prompt guide from `prompting-guides/README.md`
+5. Install runtime dependencies from `dependencies.md`
+6. Start issuing ComfyUI tasks to your agent
 
 ---
 
@@ -87,7 +88,7 @@ For training and compatibility details, see `models.md`.
 ```text
 JoyCaption -> captions.txt (raw scene descriptions, never modified)
       ↓
-LLM reads captions.txt + prompting-guide-ltx.md
+LLM reads captions.txt + prompting-guides/ltx-2.3-prompting-guide.md
       ↓
 ltx_video_prompts.json (versioned, unique prompt per image)
       ↓
@@ -117,8 +118,12 @@ comfyui-skill-public/
 ├── workflow-patterns.md
 ├── models.md
 ├── dependencies.md
-├── prompting.md
-├── prompting-guide-ltx.md
+├── prompting-guides/
+│   ├── README.md
+│   ├── general-prompting-guide.md
+│   ├── ltx-2.3-prompting-guide.md
+│   ├── flux-2-prompting-guide.md
+│   └── wan-2.2-prompting-guide.md
 ├── batch-operations.md
 ├── reference-implementations.md
 ├── demo-workflows/

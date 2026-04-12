@@ -17,6 +17,18 @@ Collect or confirm:
 6. Output location expectations.
 7. Hardware constraints that affect model choice, resolution, frame count, or batch size.
 
+## First-time control readiness gate
+
+Before running a real job, verify these minimum controls:
+
+1. `GET /system_stats` returns 200.
+2. `GET /object_info` returns JSON with node classes.
+3. `GET /queue` is reachable.
+4. WebSocket connection to `/ws` succeeds.
+5. One tiny test prompt can be queued and appears in `/history`.
+
+If any check fails, stop and fix connectivity or install issues before workflow authoring.
+
 ## Discovery-first interview
 
 Ask only for what cannot be discovered automatically.
@@ -67,6 +79,20 @@ Track at minimum:
 - preferred output folder naming
 - hardware notes
 - workflow templates the user trusts
+
+## Setup completion criteria (first-time user clarity)
+
+Treat setup as complete only when all are true:
+
+- The user can state the exact ComfyUI base URL and WebSocket URL.
+- The agent has confirmed available node classes/models from `/object_info`.
+- A model family is selected for the task (FLUX, WAN, LTX, SDXL, etc.).
+- The output location/prefix rule is agreed.
+- A single smoke-test job has run end-to-end and appears in `/history`.
+
+After completion, route to task-specific docs:
+- Prompt selection -> `prompting-guides/README.md`
+- Workflow/API execution -> `api.md`, `workflow-patterns.md`, `reference-implementations.md`
 
 ## Minimum safe assumptions
 
