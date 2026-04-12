@@ -39,15 +39,10 @@ Before writing or editing any workflow:
 - Demo workflow JSON files (FLUX image edit, LTX video) -> [demo-workflows/](demo-workflows/) — **for demonstration only; replace with your own workflows**
 - External dependencies (JoyCaption, ComfyUI, Python packages) -> [dependencies.md](dependencies.md)
 - API submission / queue / history / WebSocket -> [api.md](api.md)
-- Programmatic graph building -> [workflow-patterns.md](workflow-patterns.md)
-- Model-family requirements -> [models.md](models.md)
-- Cross-family validation / node availability -> [compatibility.md](compatibility.md)
-- LoRA loading and compatibility -> [lora.md](lora.md)
-- LoRA training pipeline -> [lora.md](lora.md) (same file)
+- Programmatic graph building, compatibility checks, and debugging -> [workflow-patterns.md](workflow-patterns.md)
+- Model-family requirements and LoRA loading/training guidance -> [models.md](models.md)
 - Prompt construction (general) -> [prompting.md](prompting.md)
-- Graph hygiene / debugging -> [graph-conventions.md](graph-conventions.md)
 - Release history -> [changelog.md](changelog.md)
-- User-fill config template -> [config-template.md](config-template.md)
 
 ## Global operating rules
 
