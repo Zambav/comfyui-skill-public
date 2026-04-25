@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.3.0
+
+### Added
+- **cron-jobs.md** — Full batch monitoring SOP: Discord message templates (start, progress, completion, failure), progress field definitions (done, avg_time, eta, iph, errors, longest, shortest), cron setup procedure (ask for Discord channel first), error recovery sequence (assess → fix → report → retry, max 3 attempts), cron destroy rules, and quick reference command block
+
+### Changed
+- **batch-operations.md** — Expanded batch monitoring section with summary of key cron rules; now references `cron-jobs.md` for full monitoring SOP
+- **SKILL.md** — Added `cron-jobs.md` to read-path routing under batch jobs
+
 ## v1.2.0
 
 ### Added
@@ -16,6 +25,7 @@
 - Expanded `setup.md` with first-time control readiness checks and setup completion criteria
 
 ## v1.1.0
+
 
 ### Added
 - **prompting-guide-ltx.md** — Full LTX 2.3 official prompting guide covering specificity, scene direction, texture, I2V verb usage, static-prompt avoidance, portrait composition, audio description, shot categories, and sample prompts

@@ -128,9 +128,16 @@ A stateless watchdog script can recover a stalled batch without knowing anything
 - Queue empty but `submitted` jobs still pending
 - ComfyUI was restarted mid-batch
 
-### NEVER Auto-Create a Cron for Batch Monitoring
+### Batch Monitoring
 
-Only create a monitor cron when a batch is confirmed actively running (first job returns success). Destroy it when the batch completes. Only one ComfyUI batch cron may exist at a time.
+For cron job setup, Discord notifications, error recovery, and monitoring SOP — see **[`cron-jobs.md`](./cron-jobs.md)**.
+
+Key rules:
+- Only one ComfyUI batch cron may exist at a time — destroy old before creating new
+- Ask the user for a Discord channel ID to use for progress notifications at batch startup
+- Create cron when first image returns OK and batch is confirmed running
+- Destroy cron when batch completes, stalls after recovery, or user manually removes it
+- On error: assess → fix → report → retry (max 3 attempts)
 
 ---
 
@@ -217,10 +224,22 @@ Always verify the ComfyUI input directory path matches the target machine before
 
 ---
 
+## Batch Monitoring & Cron Jobs
+
+For all cron job setup, monitoring SOP, Discord message formats, error recovery rules, and progress field definitions — see **[`cron-jobs.md`](./cron-jobs.md)**.
+
+This includes:
+- Discord message templates (start ping, progress ping, completion ping, failure ping)
+- Progress ping field definitions (done, avg_time, eta, iph, errors, longest, shortest)
+- Cron setup procedure (ask for Discord channel first, check/destroy old, create new)
+- Error recovery sequence (assess → fix → report → retry, max 3 attempts)
+- Cron destroy rules (success, failed, stalled, new batch, manual override)
+
+---
+
 ## Assumptions You Must Never Make
 
 - Do not assume `127.0.0.1:8188` is the only target — accept base URL as a parameter
 - Do not assume `D:/ComfyUI/input` — discover or confirm input/output paths
 - Do not assume the workflow file is at a specific absolute path — derive from project root
 - Do not assume model filenames — always confirm from `/object_info` or user config
-- Do not assume one batch cron is enough — only one may exist; destroy old before creating new

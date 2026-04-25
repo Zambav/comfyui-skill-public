@@ -37,7 +37,8 @@ Before writing or editing any workflow:
 - LTX 2.3 video or image-to-video generation -> [prompting-guides/ltx-2.3-prompting-guide.md](prompting-guides/ltx-2.3-prompting-guide.md)
 - FLUX 2 image generation/edit prompting -> [prompting-guides/flux-2-prompting-guide.md](prompting-guides/flux-2-prompting-guide.md)
 - WAN 2.2 video prompting -> [prompting-guides/wan-2.2-prompting-guide.md](prompting-guides/wan-2.2-prompting-guide.md)
-- Batch jobs with state tracking and recovery -> [batch-operations.md](batch-operations.md)
+- Batch jobs with state tracking, monitoring, and cron job setup -> [batch-operations.md](batch-operations.md)
+- Batch cron jobs, Discord notification templates, and error recovery SOP -> [cron-jobs.md](cron-jobs.md)
 - FLUX image edit nodes, LTX video nodes, api_lib reference -> [reference-implementations.md](reference-implementations.md)
 - Demo workflow JSON files (FLUX image edit, LTX video) -> [demo-workflows/](demo-workflows/) — **for demonstration only; replace with your own workflows**
 - External dependencies (JoyCaption, ComfyUI, Python packages) -> [dependencies.md](dependencies.md)
