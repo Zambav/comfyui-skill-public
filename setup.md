@@ -16,6 +16,7 @@ Collect or confirm:
 5. Whether `/object_info` is reachable.
 6. Output location expectations.
 7. Hardware constraints that affect model choice, resolution, frame count, or batch size.
+8. **Discord channel ID** for batch progress and monitoring notifications (see [Discord notifications in `cron-jobs.md`](./cron-jobs.md#step-1--ask-the-user-for-a-discord-channel)).
 
 ## Discovery-first interview
 
