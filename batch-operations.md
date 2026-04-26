@@ -136,8 +136,7 @@ Key rules:
 - Only one ComfyUI batch cron may exist at a time — destroy old before creating new
 - Ask the user for a Discord channel ID to use for progress notifications at batch startup
 - Create cron when first image returns OK and batch is confirmed running
-- Destroy cron when batch completes, stalls after recovery, or user manually removes it
-- On error: assess → fix → report → retry (max 3 attempts)
+- For destroy rules and recovery policy, follow `cron-jobs.md` as the source of truth
 
 ---
 
@@ -231,7 +230,7 @@ For all cron job setup, monitoring SOP, Discord message formats, error recovery 
 This includes:
 - Discord message templates (start ping, progress ping, completion ping, failure ping)
 - Progress ping field definitions (done, avg_time, eta, iph, errors, longest, shortest)
-- Cron setup procedure (ask for Discord channel first, check/destroy old, create new)
+- Cron setup procedure (ask for Discord channel first, check/destroy old, create after first successful render confirms batch is running)
 - Error recovery sequence (assess → fix → report → retry, max 3 attempts)
 - Cron destroy rules (success, failed, stalled, new batch, manual override)
 

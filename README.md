@@ -125,6 +125,7 @@ comfyui-skill-public/
 │   ├── flux-2-prompting-guide.md
 │   └── wan-2.2-prompting-guide.md
 ├── batch-operations.md
+├── cron-jobs.md
 ├── reference-implementations.md
 ├── demo-workflows/
 ├── changelog.md
