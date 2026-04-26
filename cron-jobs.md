@@ -11,6 +11,7 @@ Every long-running ComfyUI batch job gets a cron monitor. The cron checks the ba
 **Rules:**
 - Only one ComfyUI batch cron may exist at a time. Always check `openclaw cron list` and destroy any existing cron before creating a new one.
 - Always ask the user for a Discord channel ID to use for progress notifications before creating the cron. Do not hardcode channel IDs — collect this at batch startup.
+- Create the cron after the first image/job returns OK and the batch is confirmed running.
 - Cron is observe-and-report by default; it attempts recovery automatically (see Error Recovery below).
 
 ---
@@ -97,7 +98,7 @@ If one exists, destroy it:
 openclaw cron delete {id}
 ```
 
-### Step 3 — Create the cron
+### Step 3 — Create the cron (after first successful render confirms batch is running)
 
 ```powershell
 openclaw cron add \
@@ -105,7 +106,7 @@ openclaw cron add \
   --every "30m" \
   --message "Check {batch_name} status: {output_path} -- count outputs and check for errors" \
   --announce --to "{discord_channel_id}" --channel "discord" \
-  --session "isolated" --timeout-seconds 60000
+  --session "isolated" --timeout-seconds 60
 ```
 
 **Parameters:**
@@ -113,7 +114,7 @@ openclaw cron add \
 - `--announce` — sends cron output to Discord automatically
 - `--to "{discord_channel_id}"` — the channel ID collected from the user in Step 1
 - `--session "isolated"` — cron runs in its own context, does not affect main session
-- `--timeout-seconds 60000` — gives the cron agent up to 60s to gather stats and report
+- `--timeout-seconds 60` — gives the cron agent up to 60s to gather stats and report
 
 ### Step 4 — Send start ping manually
 
@@ -145,7 +146,7 @@ When the cron detects a problem, it follows this sequence:
 | Problem | Fix |
 |---|---|
 | ComfyUI unreachable (`ERR_CONNECTION_REFUSED`) | Restart ComfyUI, wait for port 8188 to be listening again |
-| Queue stalled, no progress >30 min | `POST /interrupt` then `POST /queue/clear`. Re-run the batch script to resume from last successful output |
+| Queue stalled, no progress >30 min | `POST /interrupt` then `POST /queue` with `{"clear": true}`. Re-run the batch script to resume from last successful output |
 | WebSocket drops | Call `reset_connection()` from `api_lib`, reconnect, resume |
 | Individual render failing repeatedly | Skip that image, log it in `batch_config.json` under `skipped_images`, continue batch |
 | Disk full | Pause immediately, alert Discord, do not continue |
@@ -187,7 +188,7 @@ openclaw cron add \
   --every "30m" \
   --message "Check {batch_name} status: {output_path} -- count outputs and check for errors" \
   --announce --to "{discord_channel_id}" --channel "discord" \
-  --session "isolated" --timeout-seconds 60000
+  --session "isolated" --timeout-seconds 60
 
 # 5. Send start ping to Discord manually
 ```
