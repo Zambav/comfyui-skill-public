@@ -3,12 +3,26 @@
 > Portable, proven code patterns for ComfyUI integration. These are reference implementations — adapt paths, node IDs, and configuration to the target install.
 >
 > **Demo workflow JSON files** are provided in [demo-workflows/](demo-workflows/) as working examples. These are tied to a specific install and are **not for production use** — export your own from your ComfyUI and adapt the patterns here. See `demo-workflows/README.md` for details.
+>
+> **Production helper:** a battle-tested, path-agnostic `api_lib.py` is shipped at [scripts/api_lib.py](scripts/api_lib.py). Prefer importing it (or copying the patterns) over re-deriving them from the snippets below.
+
+---
+
+## Contents
+
+- [FLUX 2 Image Edit — Node Map](#flux-image-edit--node-map)
+- [FLUX 2 Image Gen (T2I) — Node Map](#flux-2-image-gen-t2i--node-map)
+- [LTX 2.3 Video — Node Map](#ltx-23-video--node-map)
+- [WAN 2.2 Video — Node Map](#wan-22-video--node-map)
+- [Hunyuan T2V — Node Map](#hunyuan-t2v--node-map)
+- [Workflow Loading and Patching Pattern](#workflow-loading-and-patching-pattern)
+- [API Library — Reference Implementation](#api-library--reference-implementation)
+- [Image Resolution Helpers](#image-resolution-helpers)
+- [Prompt Versioning for LLM-Generated Prompts](#prompt-versioning-for-llm-generated-prompts)
 
 ---
 
 ## FLUX Image Edit — Node Map
-
-Workflow file: `Flux 2 Image edit workflow API.json`
 
 | Node ID | Class | Role | Action |
 |---|---|---|---|
@@ -52,6 +66,45 @@ def copy_to_comfyui_input(image_path: str, comfyui_input_dir: str) -> str:
 
 ---
 
+## FLUX 2 Image Gen (T2I) — Node Map
+
+Workflow file: `Flux 2 image gen.json`
+
+| Node ID | Class | Role | Action |
+|---------|-------|------|--------|
+| `94` | SaveImage | **Output** | ❌ DO NOT TOUCH (auto-saves to `output/Flux2_Klein_9b_kv/`) |
+| `122` | KSamplerSelect | Sampler select | ❌ DO NOT TOUCH |
+| `123` | SamplerCustomAdvanced | Sampler | ❌ DO NOT TOUCH |
+| `124` | VAEDecode | Decode latent | ❌ DO NOT TOUCH |
+| `125` | RandomNoise | Noise seed | ❌ DO NOT TOUCH |
+| `126` | UNETLoader | FLUX 2 diffusion model | ❌ DO NOT TOUCH |
+| `127` | VAELoader | flux2-vae | ❌ DO NOT TOUCH |
+| `129` | EmptyFlux2LatentImage | Latent canvas | ❌ DO NOT TOUCH |
+| `133` | CLIPLoader | FLUX 2 text encoder | ❌ DO NOT TOUCH |
+| `135` | CLIPTextEncode | **Text prompt** | ✏️ PATCH `inputs.text` |
+| `137` | Flux2Scheduler | Scheduler | ❌ DO NOT TOUCH |
+| `138` | CFGGuider | CFG | ❌ DO NOT TOUCH |
+| `139` | FluxKVCache | KV cache | ❌ DO NOT TOUCH |
+| `685` | ConditioningZeroOut | Auto-zero negative | ❌ DO NOT TOUCH |
+| `698` | Any Switch (rgthree) | Model switch | ❌ DO NOT TOUCH |
+| `725` | INTConstant | Width | ❌ DO NOT TOUCH |
+| `726` | INTConstant | Height | ❌ DO NOT TOUCH |
+| `727` | Any Switch (rgthree) | Width selector | ❌ DO NOT TOUCH |
+| `728` | Any Switch (rgthree) | Height selector | ❌ DO NOT TOUCH |
+
+**T2I patching rule:** Only node `135` needs patching. Set `inputs.text` to
+your prompt. There is no input image, and no output path override — node 94
+saves directly to ComfyUI's `output/` directory.
+
+### Output location
+
+The default `SaveImage` (node 94) writes to a ComfyUI-managed subfolder under
+`output/`. If you need a different output location, swap node 94 for an
+`ttN imageOutput` or other save node, or run a post-job `shutil.move` step
+in your batch script.
+
+---
+
 ## LTX 2.3 Video — Node Map
 
 Workflow file: `LTX 2.3 Video I2V_T2V_ZAM.json`
@@ -64,7 +117,7 @@ Workflow file: `LTX 2.3 Video I2V_T2V_ZAM.json`
 | `267:201` | PrimitiveBoolean | Switch to Text to Video? | ✏️ PATCH `inputs.value`: `false` = I2V, `true` = T2V |
 
 **Fixed reference values (do not patch unless asked):**
-
+**Fixed reference values (do not patch unless asked):**
 | Node | Value | Role |
 |---|---|---|
 | `267:257` | 1280 | Width |
@@ -75,6 +128,80 @@ Workflow file: `LTX 2.3 Video I2V_T2V_ZAM.json`
 ### Output Path Rule
 
 `filename_prefix` is relative to ComfyUI's `output/` directory. `video/car_reel` → `output/video/car_reel_00001.mp4`. **Always use a unique prefix per project** to avoid overwriting previous outputs.
+
+---
+
+## WAN 2.2 Video — Node Map
+
+WAN 2.2 is a family of video models with several variants: T2V (text-to-video), I2V (image-to-video), Animate (character animation with pose/relighting), and Lightning (fast distilled variants). Confirm from `/object_info` which loader node and diffusion model your install expects — node IDs differ between variants.
+
+### Common loader / sampler pattern (typical WAN 2.2 graph)
+
+| Component | Role | Patch? |
+|-----------|------|--------|
+| `WanVideoModelLoader` (or equivalent) | Loads the diffusion model file | ❌ DO NOT TOUCH |
+| `CLIPLoader` (umt5-xxl) | Text encoder | ❌ DO NOT TOUCH |
+| `VAELoader` (Wan2.1 or Wan2.2 VAE) | VAE | ❌ DO NOT TOUCH |
+| `CLIPTextEncode` (prompt) | **Text prompt** | ✏️ PATCH `inputs.text` |
+| `LoadImage` (I2V / Animate) | **Source image** | ✏️ PATCH `inputs.image` (filename only) |
+| `SaveVideo` (or `VHS_VideoCombine`) | **Output** | ✏️ PATCH `inputs.filename_prefix` |
+
+> **Discovery-first:** WAN 2.2 variants have very different node maps. The table
+> above shows the typical skeleton; the exact node IDs and class names must
+> be confirmed from `/object_info` on the target install. If your install
+> uses a community wrapper (e.g. `ComfyUI-WanVideoWrapper`), the node class
+> names will differ from the upstream ComfyUI versions.
+
+### Animate-specific extras
+
+The Animate variant adds:
+
+- `OnnxDetectionLoader` (or equivalent) — pose / detection model
+- `ImagePoseDetection` or similar — extracts pose guidance
+- `LoadImage` for the character reference
+- Optional relighting LoRA loader (e.g. `WanAnimate_relight_lora`)
+
+> **Asset checklist for Animate:** pose/detection model (`vitpose-l-wholebody.onnx` or similar), YOLO model (`yolo11x-pose.pt` or similar), and SAM2 weights must be present. Use an asset-audit script (see `scripts/asset_audit_template.md` if you ship one) to confirm before queueing.
+
+### WAN 2.2 output path rule
+
+Same as LTX: `filename_prefix` is relative to ComfyUI's `output/`. Always
+unique per project. WAN outputs are larger than LTX (14B diffusion, longer
+clips) — confirm disk space before batch runs.
+
+---
+
+## Hunyuan T2V — Node Map
+
+Hunyuan Video is Tencent's text-to-video model family. A typical Hunyuan T2V
+workflow has this skeleton:
+
+| Component | Role | Patch? |
+|-----------|------|--------|
+| `HunyuanVideoModelLoader` (or equivalent) | Loads the diffusion model | ❌ DO NOT TOUCH |
+| `DualCLIPLoader` (or `CLIPLoader`) | Hunyuan text encoder pair | ❌ DO NOT TOUCH |
+| `VAELoader` (Hunyuan VAE) | VAE | ❌ DO NOT TOUCH |
+| `CLIPTextEncode` (positive prompt) | **Text prompt** | ✏️ PATCH `inputs.text` |
+| `CLIPTextEncode` (negative prompt) | Negative prompt | ✏️ PATCH `inputs.text` |
+| `EmptyHunyuanLatentVideo` | Latent canvas (frames × H × W) | ❌ DO NOT TOUCH |
+| `KSampler` (advanced) | Sampler | ❌ DO NOT TOUCH |
+| `VAEDecode` | Decode latent | ❌ DO NOT TOUCH |
+| `VHS_VideoCombine` (or `SaveVideo`) | **Output** | ✏️ PATCH `inputs.frame_rate`, `inputs.filename_prefix` |
+
+### Hunyuan output path rule
+
+`filename_prefix` is relative to ComfyUI's `output/`. Hunyuan videos are
+typically 720×1280, 24fps, ~5s clips — plan output folder size accordingly.
+
+### Negative prompt standard for Hunyuan
+
+Hunyuan benefits from concise negatives. Suggested baseline:
+
+```
+"worst quality, low quality, blurry, jittery, deformed face, extra limbs, watermark, text"
+```
+
+Tune per-render based on the artifacts you actually see.
 
 ---
 
@@ -113,6 +240,16 @@ def build_flux_workflow(filename: str, prompt: str, seed: int,
 
     return wf
 
+def build_flux_t2i_workflow(prompt: str, base_workflow_path: str) -> dict:
+    """
+    Returns a fully patched deep copy of the base FLUX 2 image-gen (T2I) workflow.
+    Override: text prompt only (node 135). Output is whatever the workflow's
+    SaveImage node writes -- usually ComfyUI's `output/Flux2_Klein_9b_kv/`.
+    """
+    wf = copy.deepcopy(load_workflow(base_workflow_path))
+    wf["135"]["inputs"]["text"] = prompt
+    return wf
+
 def build_ltx_workflow(filename: str, prompt: str, filename_prefix: str,
                        t2v_mode: bool = False,
                        base_workflow_path: str = None) -> dict:
@@ -128,13 +265,45 @@ def build_ltx_workflow(filename: str, prompt: str, filename_prefix: str,
     wf["267:201"]["inputs"]["value"]          = t2v_mode        # False=I2V, True=T2V
 
     return wf
+
+def build_hunyuan_t2v_workflow(
+    prompt: str,
+    negative_prompt: str,
+    filename_prefix: str,
+    frame_rate: int = 24,
+    base_workflow_path: str = "",
+) -> dict:
+    """
+    Returns a deep copy of a Hunyuan T2V workflow with the prompt,
+    negative prompt, output filename prefix, and frame rate patched.
+    Node IDs below are placeholders -- confirm from /object_info on the
+    target install.
+    """
+    wf = copy.deepcopy(load_workflow(base_workflow_path))
+
+    # Positive prompt
+    wf["<CLIPTextEncode.pos>"]["inputs"]["text"] = prompt
+    # Negative prompt
+    wf["<CLIPTextEncode.neg>"]["inputs"]["text"] = negative_prompt
+    # Output: filename_prefix and frame rate
+    wf["<VHS_VideoCombine>"]["inputs"]["filename_prefix"] = filename_prefix
+    wf["<VHS_VideoCombine>"]["inputs"]["frame_rate"]      = frame_rate
+
+    return wf
 ```
 
 ---
 
 ## API Library — Reference Implementation
 
-This is the proven pattern for ComfyUI WebSocket interaction. Use this when a shared `api_lib.py` is not available on the target machine.
+> **Production code:** A battle-tested, path-agnostic implementation is
+> shipped at [scripts/api_lib.py](scripts/api_lib.py). It includes a
+> persistent WebSocket with thread-safe reconnect, queue/history/interrupt
+> helpers, and an env-var-configurable host. Prefer it (or copy the patterns
+> from it) over the snippet below.
+
+The class below is the inline reference, kept for environments that want
+to embed the API helpers directly without depending on `scripts/api_lib.py`.
 
 ### Dependencies
 
@@ -142,7 +311,7 @@ This is the proven pattern for ComfyUI WebSocket interaction. Use this when a sh
 pip install requests websocket-client
 ```
 
-### Core Functions
+### Core class (inline fallback)
 
 ```python
 import uuid, json, requests, websocket
@@ -150,31 +319,22 @@ import uuid, json, requests, websocket
 class ComfyUI:
     def __init__(self, host: str = "http://127.0.0.1:8188",
                  ws_host: str = "ws://127.0.0.1:8188"):
-        self.host   = host
-        self.ws    = ws_host
+        self.host = host
+        self.ws   = ws_host
 
     def is_alive(self) -> bool:
-        """Check if ComfyUI is reachable."""
         try:
             return requests.get(f"{self.host}/system_stats", timeout=5).status_code == 200
         except Exception:
             return False
 
     def object_info(self) -> dict:
-        """Fetch all available node classes and their inputs."""
         return requests.get(f"{self.host}/object_info", timeout=30).json()
 
     def get_node_class(self, node_name: str) -> dict | None:
-        """Get inputs/outputs for a specific node class."""
-        info = self.object_info()
-        return info.get(node_name)
+        return self.object_info().get(node_name)
 
     def queue_prompt(self, workflow: dict, client_id: str) -> str:
-        """
-        POST a workflow to the queue.
-        Returns the prompt_id.
-        Raises RuntimeError if ComfyUI rejects the workflow.
-        """
         payload = {"prompt": workflow, "client_id": client_id}
         r = requests.post(f"{self.host}/prompt", json=payload, timeout=30)
         r.raise_for_status()
@@ -186,12 +346,10 @@ class ComfyUI:
     def wait_for_completion(self, prompt_id: str,
                             ws: websocket.WebSocket,
                             timeout: float = None) -> dict:
-        """
-        Block on the WebSocket until ComfyUI signals this prompt_id is done.
-        Returns the job history entry on success.
-        Raises RuntimeError if the job errored.
-        """
+        start = time.time() if timeout else None
         while True:
+            if timeout is not None and (time.time() - start) > timeout:
+                raise TimeoutError(f"Job {prompt_id} did not complete within {timeout}s")
             raw = ws.recv()
             try:
                 msg = json.loads(raw)
@@ -201,15 +359,13 @@ class ComfyUI:
                     and msg.get("data", {}).get("node") is None
                     and msg.get("data", {}).get("prompt_id") == prompt_id):
                 break
-
-        # Verify via /history
         resp = requests.get(f"{self.host}/history/{prompt_id}", timeout=10)
         history = resp.json()
         if prompt_id not in history:
             raise RuntimeError(f"Job {prompt_id} missing from /history after completion signal")
         job = history[prompt_id]
         if job.get("status", {}).get("status_str") == "error":
-            raise RuntimeError(f"Job {prompt_id} errored — check ComfyUI console")
+            raise RuntimeError(f"Job {prompt_id} errored -- check ComfyUI console")
         return job
 
     def get_history(self, prompt_id: str) -> dict:
@@ -225,7 +381,7 @@ class ComfyUI:
         requests.post(f"{self.host}/queue", json={"clear": True}, timeout=10)
 ```
 
-### Usage Pattern
+### Usage pattern
 
 ```python
 client = ComfyUI(host="http://127.0.0.1:8188")
@@ -246,6 +402,17 @@ try:
 finally:
     ws.close()
 ```
+
+### Production vs. inline -- which to use
+
+| Situation | Use |
+|-----------|-----|
+| Building a real batch runner, long-lived script, or agent tool | [scripts/api_lib.py](scripts/api_lib.py) (persistent WS, reconnect, env-var config) |
+| Quick inline tests, throwaway scripts, learning examples | The `ComfyUI` class above |
+| Embedded in a notebook where module imports are awkward | The `ComfyUI` class above |
+
+The two implementations are behaviorally compatible -- you can swap between
+them without changing call sites.
 
 ---
 
@@ -282,6 +449,47 @@ def derive_job_folder(input_folder: str, workflow_name: str,
     folder_snake   = to_snake(Path(input_folder).name)
     workflow_snake = to_snake(workflow_name)
     return str(Path(batch_jobs_root) / f"{folder_snake}_batch_job_{workflow_snake}")
+
+def derive_job_folder_dated(
+    batch_jobs_root: str,
+    project_name: str,
+    batch_name: str,
+    when: str | None = None,
+) -> str:
+    """
+    Date-prefixed job folder, organized per project.
+
+    Returns: `{batch_jobs_root}/{PROJECT_NAME}/{YYYY-MM-DD}_{batch_name}/`
+
+    `when` is an ISO date string (YYYY-MM-DD); defaults to today.
+
+    Use this when you want multiple runs of the same project to be grouped
+    and to never overwrite each other.
+    """
+    from datetime import date
+    import re
+    when_iso = when or date.today().isoformat()
+    safe = re.sub(r"[^\w\-]", "_", batch_name).lower()[:40]
+    return str(Path(batch_jobs_root) / project_name / f"{when_iso}_{safe}")
+
+def derive_temp_workflow_copy(
+    temp_root: str,
+    project_name: str,
+    batch_name: str,
+    workflow_filename: str,
+    when: str | None = None,
+) -> str:
+    """
+    Returns: `{temp_root}/{PROJECT_NAME}/{YYYY-MM-DD}_{batch_name}/{filename}.json`
+
+    Copy the base workflow here before patching. Delete after the run.
+    """
+    from datetime import date
+    import re
+    when_iso = when or date.today().isoformat()
+    safe = re.sub(r"[^\w\-]", "_", batch_name).lower()[:40]
+    wf_clean = re.sub(r"[^\w]", "_", workflow_filename)
+    return str(Path(temp_root) / project_name / f"{when_iso}_{safe}" / wf_clean)
 
 def resolve_images(folder: str, extensions=None) -> list[str]:
     """Recursively find all image files in a folder."""

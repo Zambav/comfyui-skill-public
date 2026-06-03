@@ -32,15 +32,19 @@ Before writing or editing any workflow:
 
 ## Read path by task
 
+- Cold-start instructions for an AI agent -> [AGENTS.md](AGENTS.md)
 - Setup / first run / portability questions -> [setup.md](setup.md)
 - Prompting guide index (all families) -> [prompting-guides/README.md](prompting-guides/README.md)
 - LTX 2.3 video or image-to-video generation -> [prompting-guides/ltx-2.3-prompting-guide.md](prompting-guides/ltx-2.3-prompting-guide.md)
 - FLUX 2 image generation/edit prompting -> [prompting-guides/flux-2-prompting-guide.md](prompting-guides/flux-2-prompting-guide.md)
 - WAN 2.2 video prompting -> [prompting-guides/wan-2.2-prompting-guide.md](prompting-guides/wan-2.2-prompting-guide.md)
 - Batch jobs with state tracking, monitoring, and cron job setup -> [batch-operations.md](batch-operations.md)
-- Batch cron jobs, Discord notification templates, and error recovery SOP -> [cron-jobs.md](cron-jobs.md)
-- FLUX image edit nodes, LTX video nodes, api_lib reference -> [reference-implementations.md](reference-implementations.md)
-- Demo workflow JSON files (FLUX image edit, LTX video) -> [demo-workflows/](demo-workflows/) — **for demonstration only; replace with your own workflows**
+- Batch cron jobs, notification templates, and error recovery SOP -> [cron-jobs.md](cron-jobs.md)
+- FLUX image edit / FLUX T2I / LTX / WAN / Hunyuan node maps and code patterns -> [reference-implementations.md](reference-implementations.md)
+- Production-ready ComfyUI API helper (persistent WS, reconnect, env config) -> [scripts/api_lib.py](scripts/api_lib.py)
+- Sanitized batch script starter -> [scripts/template_run_batch.py](scripts/template_run_batch.py)
+- JoyCaption-driven image-to-prompt pipeline convention -> [docs/joycaption-convention.md](docs/joycaption-convention.md)
+- Demo workflow JSON files (FLUX image edit, FLUX T2I, LTX video) -> [demo-workflows/](demo-workflows/) — **for demonstration only; replace with your own workflows**
 - External dependencies (JoyCaption, ComfyUI, Python packages) -> [dependencies.md](dependencies.md)
 - API submission / queue / history / WebSocket -> [api.md](api.md)
 - Programmatic graph building, compatibility checks, and debugging -> [workflow-patterns.md](workflow-patterns.md)
@@ -70,6 +74,8 @@ Before writing or editing any workflow:
 - Keep setup-specific notes out of this file; put them in a per-user config or setup reference.
 - Never edit a base workflow JSON file directly — always deep copy and patch.
 - Demo workflow JSON files in [demo-workflows/](demo-workflows/) are provided as working examples. Replace them with your own workflows adapted to your ComfyUI install.
+- **Never hardcode a ComfyUI host, input directory, Discord channel, model filename, or workflow path** into a committed script. Use the [scripts/api_lib.py](scripts/api_lib.py) env-var conventions (`COMFYUI_HOST`, `COMFYUI_WS`, `COMFYUI_INPUT_DIR`) or pass values through function arguments.
+- Before generating prompts for an image set, check for an existing `joycaption.md` in the input folder (see [docs/joycaption-convention.md](docs/joycaption-convention.md)). If found, ask the user: use it, update it, or start fresh.
 
 ## Cold-read test
 

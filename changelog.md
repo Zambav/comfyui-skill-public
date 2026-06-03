@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.4.0
+
+### Added
+- **`scripts/api_lib.py`** — battle-tested, path-agnostic ComfyUI API helper. Persistent WebSocket with thread-safe reconnect, queue/history/interrupt/clear helpers, env-var-configurable host (`COMFYUI_HOST`, `COMFYUI_WS`), and zero hardcoded machine paths.
+- **`scripts/template_run_batch.py`** — sanitized batch-run starter script (FLUX 2 image edit). Reads the workflow from a user-supplied path, derives output and job folders from the input folder, uses env-var-configurable ComfyUI host. Replace the controller's `scripts/template_run_batch.py` for any public use.
+- **`docs/joycaption-convention.md`** — formal JoyCaption naming, format, and pipeline convention. Documents the three naming variants (`joycaption.md`, `joycaption_{foldername}.md`, `joycaption_{asset_name}.md`), per-image `## filename.ext` heading format, description rules, and the LLM-driven prompt generation pipeline.
+- **`AGENTS.md`** — AI agent cold-start instructions at the public-skill root. File placement rules, read path for a cold agent, hard rules (no absolute paths, no model filename assumptions, no notification destination assumptions, etc.), and the standardized intake questionnaire pattern.
+- **FLUX 2 Image Gen (T2I) node map** in `reference-implementations.md` — the missing table for the `Flux 2 image gen` workflow (node `135` text prompt, node `94` SaveImage, etc.).
+- **WAN 2.2 node map** in `reference-implementations.md` — typical skeleton, Animate variant extras, and asset-checklist guidance.
+- **Hunyuan T2V node map** in `reference-implementations.md` — typical loader/encoder/VAE/sampler/output skeleton with node-class placeholders to be confirmed from `/object_info`.
+- **FLUX T2I build helper** (`build_flux_t2i_workflow`) and **Hunyuan build helper** (`build_hunyuan_t2v_workflow`) in `reference-implementations.md`.
+- **`derive_job_folder_dated` and `derive_temp_workflow_copy`** helpers in `reference-implementations.md` — date-prefixed job folder layout, recommended for production.
+- **Intake Questionnaire** section in `batch-operations.md` — formal 8-question pattern for an agent to collect from the user (input folder, output, batch name, prompt, batch count, I2V/T2V, source image, notification destination). Replaces ad-hoc "ask two questions" guidance with a portable standard.
+
+### Changed
+- **`reference-implementations.md`** — added a Contents section; the API library section now points to `scripts/api_lib.py` as the production code and demotes the inline `ComfyUI` class to a fallback; the image resolution helpers section gains the dated job folder helpers.
+- **`batch-operations.md`** — sanitized the state file example to use placeholder paths; added a recommended date-prefixed job folder layout alongside the legacy `Batch Jobs/{folder}_batch_job_{wf}/` layout; replaced the personal path references in the "Assumptions" section.
+- **`cron-jobs.md`** — converted from Discord-specific to scheduler-agnostic. OpenClaw is shown as one possible scheduler (alongside `cron`, `launchd`, `systemd`); the notification destination is no longer assumed to be Discord (the agent asks the user). Removed all hardcoded channel IDs.
+- **`SKILL.md`** — added JoyCaption-trigger and "check for existing joycaption.md" rule to the global operating rules; updated the read path to point at the new files; added the no-hardcoded-values rule.
+- **`README.md`** — added the new files to the key capabilities, quick start, and repository structure sections.
+
 ## v1.3.0
 
 ### Added

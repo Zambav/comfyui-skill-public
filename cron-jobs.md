@@ -63,7 +63,7 @@ Fix attempted: {what was tried}
 
 | Field | How to derive |
 |---|---|
-| `done` | Count files in output folder matching the batch's naming pattern (e.g. `*_ghibli__*.jpg`) |
+| `done` | Count files in output folder matching the batch's naming pattern (e.g. `*_<style>__*.jpg`) |
 | `total` | `images × passes` for this batch |
 | `pct` | `done / total × 100`, formatted as integer |
 | `avg_time` | Total elapsed time / number of completed renders |
@@ -78,79 +78,113 @@ Fix attempted: {what was tried}
 
 ## Cron Setup Procedure
 
-### Step 1 — Ask the user for a Discord channel
+> **OpenClaw / `openclaw cron` is one possible scheduler.** This skill is
+> scheduler-agnostic -- the SOP works with any agent scheduler that can
+> invoke a periodic prompt or run a script. Substitute the `openclaw cron`
+> commands below with your scheduler's equivalent (cron, launchd, systemd
+> timers, GitHub Actions, a Discord bot loop, etc.). The structure of the
+> steps is the same.
 
-Before creating the cron, ask the user:
+### Step 1 -- Ask the user for a notification destination
 
-> "Which Discord channel should I post batch progress updates to?"
+Before creating the monitor, ask the user:
 
-Use the channel ID they provide in place of any hardcoded default.
+> "Where should I post batch progress updates?"
 
-### Step 2 — Check for existing cron
+Collect whatever they answer (Discord channel ID, email, log file path,
+webhook URL, etc.). The user owns this choice -- the skill does not assume
+any default. Pass it through to the scheduler and the message templates.
 
-```powershell
+### Step 2 -- Check for existing monitor
+
+```bash
+# OpenClaw example
 openclaw cron list
+# Linux cron
+crontab -l | grep -i comfy
+# systemd
+systemctl --user list-timers
 ```
 
 If one exists, destroy it:
 
-```powershell
+```bash
 openclaw cron delete {id}
+# or
+crontab -e   # then remove the line
 ```
 
-### Step 3 — Create the cron (after first successful render confirms batch is running)
+### Step 3 -- Create the monitor (after the first successful render confirms the batch is running)
 
-```powershell
+The cron / scheduled task should:
+
+- Run at a fixed interval (30 minutes is a good default)
+- Invoke an isolated context (so it does not collide with the main session)
+- Pass through the notification destination and the job's output path
+- Have a generous timeout (60s+ to gather stats and report)
+- **Wait for the first successful render before creating it** -- never create
+  a monitor for a batch that has not yet produced any output
+
+```bash
+# OpenClaw example -- substitute your scheduler's equivalent
 openclaw cron add \
   --name "ComfyUI Batch Monitor -- {job_name}" \
   --every "30m" \
   --message "Check {batch_name} status: {output_path} -- count outputs and check for errors" \
-  --announce --to "{discord_channel_id}" --channel "discord" \
+  --announce --to "{notification_destination}" --channel "{channel_type}" \
   --session "isolated" --timeout-seconds 60
 ```
 
 **Parameters:**
-- `--every "30m"` — checks every 30 minutes
-- `--announce` — sends cron output to Discord automatically
-- `--to "{discord_channel_id}"` — the channel ID collected from the user in Step 1
-- `--session "isolated"` — cron runs in its own context, does not affect main session
-- `--timeout-seconds 60` — gives the cron agent up to 60s to gather stats and report
 
-### Step 4 — Send start ping manually
+- `30m` interval -- checks every 30 minutes
+- `announce` -- sends monitor output to the destination automatically
+- `to` -- the destination collected from the user in Step 1
+- `isolated` session -- monitor runs in its own context, does not affect main session
+- `timeout-seconds 60` -- gives the monitor up to 60s to gather stats and report
 
-The cron won't fire immediately. Send the start ping to Discord right after creating the cron — see Start Ping template above.
+### Step 4 -- Send start notification manually
+
+The monitor won't fire immediately. Send the start notification right after
+creating it -- see Start notification template above.
 
 ---
 
 ## Error Recovery
 
-When the cron detects a problem, it follows this sequence:
+When the monitor detects a problem, it follows this sequence:
 
 ### Attempt sequence (max 3 recoveries per batch)
 
 **On each error detected:**
-1. **Assess** — identify what went wrong (ComfyUI down, queue stalled, specific job failing, disk full, etc.)
-2. **Fix** — apply the minimum necessary fix:
-   - ComfyUI down → restart ComfyUI, wait for port 8188 to be listening again
-   - Queue stalled → `POST /interrupt` → clear queue → resubmit failed jobs
-   - WebSocket drop → reset connection via `api_lib.reset_connection()`
-   - Individual render consistently failing → log the image/prompt combo, skip it, continue
-   - Disk near full → pause and alert immediately
-3. **Report** — post to Discord: what the problem was, what was done to fix it, what happens next
-4. **Retry** — allow the batch to continue from where it left off
 
-**After 3 recovery attempts:** Stop trying. Post final failure report to Discord and destroy the cron. Do not keep retrying indefinitely.
+1. **Assess** -- identify what went wrong (ComfyUI down, queue stalled,
+   specific job failing, disk full, etc.)
+2. **Fix** -- apply the minimum necessary fix:
+   - ComfyUI down -> restart ComfyUI, wait for port 8188 to be listening again
+   - Queue stalled -> `POST /interrupt` -> clear queue -> resubmit failed jobs
+   - WebSocket drop -> recreate the connection (re-call `ws.connect()` or
+     the equivalent in your helper module)
+   - Individual render consistently failing -> log the image/prompt combo,
+     skip it, continue
+   - Disk near full -> pause and alert immediately
+3. **Report** -- post to the destination the user gave: what the problem
+   was, what was done to fix it, what happens next
+4. **Retry** -- allow the batch to continue from where it left off
+
+**After 3 recovery attempts:** Stop trying. Post final failure report to
+the destination and destroy the monitor. Do not keep retrying indefinitely.
 
 ### Common recovery scenarios
 
 | Problem | Fix |
-|---|---|
+|---------|-----|
 | ComfyUI unreachable (`ERR_CONNECTION_REFUSED`) | Restart ComfyUI, wait for port 8188 to be listening again |
 | Queue stalled, no progress >30 min | `POST /interrupt` then `POST /queue` with `{"clear": true}`. Re-run the batch script to resume from last successful output |
-| WebSocket drops | Call `reset_connection()` from `api_lib`, reconnect, resume |
+| WebSocket drops | Recreate the connection, resume |
 | Individual render failing repeatedly | Skip that image, log it in `batch_config.json` under `skipped_images`, continue batch |
-| Disk full | Pause immediately, alert Discord, do not continue |
-| Batch silently producing no new outputs for >60 min | Treat as stalled — attempt queue reset. Fail after 2 more attempts |
+| Disk full | Pause immediately, alert the destination, do not continue |
+| Batch silently producing no new outputs for >60 min | Treat as stalled -- attempt queue reset. Fail after 2 more attempts |
 
 ---
 
@@ -172,23 +206,27 @@ Destroy the cron and stop the batch when any of these conditions occur:
 
 ## Quick Reference
 
-```powershell
-# 1. Ask user for Discord channel ID
-#    "Which Discord channel should I post batch progress updates to?"
+```bash
+# 1. Ask the user where to post batch progress updates
+#    "Where should I post batch progress updates?"
+#    (e.g. Discord channel ID, email, log file, webhook URL)
 
-# 2. Check for existing cron
+# 2. Check for existing monitor (substitute your scheduler's command)
 openclaw cron list
+# or:   crontab -l | grep -i comfy
+# or:   systemctl --user list-timers
 
 # 3. If one exists, destroy it
 openclaw cron delete {id}
+# or:   crontab -e   # then remove the line
 
-# 4. Create new cron
+# 4. Create new monitor (substitute your scheduler's command)
 openclaw cron add \
   --name "ComfyUI Batch Monitor -- {job_name}" \
   --every "30m" \
   --message "Check {batch_name} status: {output_path} -- count outputs and check for errors" \
-  --announce --to "{discord_channel_id}" --channel "discord" \
+  --announce --to "{notification_destination}" --channel "{channel_type}" \
   --session "isolated" --timeout-seconds 60
 
-# 5. Send start ping to Discord manually
+# 5. Send start notification to the destination manually
 ```

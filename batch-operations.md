@@ -52,6 +52,11 @@ For jobs that span sessions (long-running batches, overnight runs, or recovery s
 - Watchdog recovery
 - Progress reporting without re-querying ComfyUI
 
+> **Storage location:** the state file is written inside the same job folder
+> the run script lives in. That folder is created with
+> `os.makedirs(job_folder, exist_ok=True)` before writing anything, and is
+> never reused for a different run.
+
 ### Job State File
 
 Save as `job_state.json` alongside the generated script:
@@ -59,16 +64,16 @@ Save as `job_state.json` alongside the generated script:
 ```json
 {
   "batch_name": "earth_maze_v2",
-  "input_folder": "D:/images/earth_maze",
+  "input_folder": "/path/to/your/earth_maze",
   "workflow_file": "Flux 2 Image edit workflow API.json",
   "created_at": "2026-04-01T03:00:00Z",
   "jobs": [
     {
       "label": "earth_maze_00001.jpg",
-      "image_path": "D:/images/earth_maze/earth_maze_00001.jpg",
+      "image_path": "/path/to/your/earth_maze/earth_maze_00001.jpg",
       "batch_prompt": "enhance realism, cinematic lighting",
       "seed": 1234567890,
-      "output_dir": "D:/images/earth_maze flux edit batch/batch_01",
+      "output_dir": "/path/to/your/earth_maze/earth_maze flux edit batch/batch_01",
       "save_prefix": "earth_maze_",
       "status": "success",
       "prompt_id": "abc123",
@@ -151,10 +156,10 @@ Output folders are always **relative to the input folder** and self-describing:
 ```
 
 ```
-# Formula
-input_folder = "D:/photos/portraits"
-batch_root   = "D:/photos/portraits/portraits flux edit batch"
-batch_01     = "D:/photos/portraits/portraits flux edit batch/batch_01"
+# Formula (replace with your actual paths)
+input_folder = "/path/to/your/portraits"
+batch_root   = "/path/to/your/portraits/portraits flux edit batch"
+batch_01     = "/path/to/your/portraits/portraits flux edit batch/batch_01"
 ```
 
 This keeps source images and outputs together. No hunting across the filesystem.
@@ -163,22 +168,39 @@ This keeps source images and outputs together. No hunting across the filesystem.
 
 ## Job Folder Structure
 
-All generated scripts, logs, and state for a batch run live in a **job folder** inside the project workspace — never inside the input or output image folders.
+All generated scripts, logs, and state for a batch run live in a **job folder** inside the project workspace -- never inside the input or output image folders.
 
 ```
-{project_root}/Batch Jobs/
+{project_root}/jobs/
     {input_folder_name}_batch_job_{workflow_name_snake_case}/
         run_batch.py          # the generated batch script
         job_state.json         # live state file (created at run time)
         batch_config.json      # snapshot of run parameters
 ```
 
-**Examples:**
+If you want runs grouped by project (one project, many batches over time),
+use a date-prefixed layout -- see
+[`derive_job_folder_dated`](./reference-implementations.md#image-resolution-helpers):
+
+```
+{project_root}/jobs/
+    {PROJECT_NAME}/
+        {YYYY-MM-DD}_{short_description}/
+            run_{PROJECT}_{BATCH}.py
+            job_state.json
+            batch_config.json
+```
+
+This is the recommended layout for production: it groups related runs under
+a project name and uses a date prefix so runs never overwrite each other.
+
+**Examples (replace with your actual paths):**
 
 | Input folder | Workflow | Job folder |
 |---|---|---|
-| `D:/photos/portraits` | `Flux 2 Image edit workflow API` | `Batch Jobs/portraits_batch_job_flux_2_image_edit_workflow_api/` |
-| `D:/renders/scifi` | `LTX 2.3 Video I2V_T2V` | `Batch Jobs/scifi_batch_job_ltx_2_3_video_i2v_t2v/` |
+| `/photos/portraits` | `Flux 2 Image edit workflow API` | `jobs/portraits_batch_job_flux_2_image_edit_workflow_api/` |
+| `/renders/scifi` | `LTX 2.3 Video I2V_T2V` | `jobs/scifi_batch_job_ltx_2_3_video_i2v_t2v/` |
+| `/photos/portraits` (re-run on 2026-05-22) | `Flux 2 Image edit workflow API` | `jobs/MyProject/2026-05-22_second_pass/` (dated layout) |
 
 ---
 
@@ -186,11 +208,20 @@ All generated scripts, logs, and state for a batch run live in a **job folder** 
 
 A generated batch script should contain:
 
-1. **Config section** — `INPUT_FOLDER`, `BATCHES`, `BATCH_JOBS_ROOT` (all derived, never hardcoded in the template itself)
-2. **Helpers** — `derive_output_dir`, `derive_save_prefix`, `derive_job_folder`, `resolve_images`
-3. **Pre-flight checks** — ComfyUI alive, workflow file exists, images found, input dir accessible
-4. **Main loop** — one client_id, one WS, block per job, verify
-5. **Summary** — success/fail counts, output paths, count verification
+1. **Config section** -- `INPUT_FOLDER`, `BATCHES`, `JOBS_ROOT` (all
+   supplied by the user or derived, never hardcoded in the template)
+2. **Helpers** -- `derive_output_dir`, `derive_save_prefix`,
+   `derive_job_folder` (and `derive_job_folder_dated` for production),
+   `resolve_images`
+3. **Pre-flight checks** -- ComfyUI alive, workflow file exists, images
+   found, input dir accessible
+4. **Main loop** -- one client_id, one WS, block per job, verify
+5. **Summary** -- success/fail counts, output paths, count verification
+
+A working, sanitized starter is at [`scripts/template_run_batch.py`](./scripts/template_run_batch.py).
+It reads the workflow from a user-supplied path, uses an env-var-configurable
+ComfyUI host, and derives the output / job folders from the input folder.
+Copy it into your project, fill in the `CONFIG` block, and run.
 
 The script is **generated per run** and **never edits the base workflow file**.
 
@@ -238,7 +269,44 @@ This includes:
 
 ## Assumptions You Must Never Make
 
-- Do not assume `127.0.0.1:8188` is the only target — accept base URL as a parameter
-- Do not assume `D:/ComfyUI/input` — discover or confirm input/output paths
-- Do not assume the workflow file is at a specific absolute path — derive from project root
-- Do not assume model filenames — always confirm from `/object_info` or user config
+- Do not assume `127.0.0.1:8188` is the only target -- accept base URL as a parameter (or env var `COMFYUI_HOST`)
+- Do not assume a particular input directory layout -- discover or confirm
+  input/output paths from the user
+- Do not assume the workflow file is at a specific absolute path -- let the
+  user supply it (or discover it from a user-owned `workflows/` folder)
+- Do not assume model filenames -- always confirm from `/object_info` or
+  user config
+- Do not assume a Discord channel ID, bot token, or any notification
+  destination -- ask the user at batch startup
+
+---
+
+## Intake Questionnaire (for an agent running a batch)
+
+When a user asks the agent to run a batch (image edit, video, etc.), ask only
+the questions needed to fill the script's CONFIG block. Do not guess.
+
+For an image edit / batch job:
+
+1. **"Where are the photos / what's the input folder?"** -- input path
+2. **"Where should outputs go?"** -- output path, or accept the auto-derived
+   `{input_folder}/{input_folder_name} flux edit batch/`
+3. **"What should I call this batch?"** -- short description for the job folder
+4. **"What's the prompt?"** -- edit instruction (I2I) or description (T2I)
+5. **"One batch, or multiple batches with different prompts?"**
+
+For LTX / WAN / Hunyuan video:
+
+6. **"Image-to-video or text-to-video?"** -- if I2V, also ask for source image
+7. **"What should I call the output file?"** -- used as `filename_prefix`
+   (make it project-specific to avoid overwriting)
+
+For monitoring:
+
+8. **"Where should I post progress updates?"** -- collect a destination from
+   the user at batch startup. Do not hardcode this.
+
+**Before running:** check for existing `joycaption.md` in the input folder
+(see [`docs/joycaption-convention.md`](./docs/joycaption-convention.md)).
+If found, ask the user: "Found existing `joycaption.md` -- use it, update
+it, or start fresh?"
