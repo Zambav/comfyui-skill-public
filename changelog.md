@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.4.1
+
+### Changed
+- **README.md** — sharpened "any agent harness" framing, added "Works with any agent" table (Hermes/OpenClaw, Claude Code, Codex, Cursor, Aider, etc.), added "Bring your own workflows" section that strongly encourages exporting your own workflows from ComfyUI and asking the agent to integrate them, added agents-harness badge, hardened the "demo workflows" callout from a soft footnote into an explicit "starting points, not drop-ins" message.
+
 ## v1.4.0
 
 ### Added

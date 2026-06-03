@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>Run ComfyUI in plain English from your AI agent.</strong><br>
-  Image, video, and LoRA workflows — any install, any model, any machine.
+  Image, video, and LoRA workflows — any install, any model, any agent harness.
 </p>
 
 <p align="center">
@@ -14,6 +14,7 @@
   <a href="https://github.com/Zambav/comfyui-skill-public/issues"><img src="https://img.shields.io/github/issues/Zambav/comfyui-skill-public" alt="Open issues"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/ComfyUI-local%20%7C%20remote%20%7C%20cloud-F09B7A" alt="ComfyUI: local, remote, cloud">
+  <img src="https://img.shields.io/badge/agents-Hermes%20%7C%20Claude%20Code%20%7C%20Codex%20%7C%20Cursor-7C3AED" alt="Agents: Hermes, Claude Code, Codex, Cursor">
 </p>
 
 <p align="center">
@@ -21,6 +22,7 @@
   <a href="#worked-example">Worked example</a> ·
   <a href="#what-you-can-ask">What you can ask</a> ·
   <a href="#why-this-works">Why it works</a> ·
+  <a href="#works-with-any-agent">Works with any agent</a> ·
   <a href="#when-to-use-this">When to use</a> ·
   <a href="#repository-structure">Repo structure</a>
 </p>
@@ -174,6 +176,58 @@ The official CLI is excellent for install and lifecycle. The REST/WS API fills i
 
 ---
 
+## Works with any agent
+
+This skill is **agent-harness agnostic**. It's a set of Markdown docs, Python helpers, and demo workflows — not a binary or a platform plugin. Drop it into any agent that can read files and run Python.
+
+Tested and supported:
+
+| Agent | Notes |
+|-------|-------|
+| **Hermes / OpenClaw** | Native. The skill was originally authored for this stack. |
+| **Claude Code** | Works out of the box. `AGENTS.md` is the read path. |
+| **Codex CLI** | Works out of the box. Treat the repo as a skill pack. |
+| **Cursor** | Works. Use the project's file tree as the agent context. |
+| **Aider, Continue.dev, Cody, custom agents** | Anything that can read files and run `python3 scripts/*.py` works the same way. |
+
+What the agent does, regardless of harness:
+
+1. Read `SKILL.md` to confirm the skill applies.
+2. Read the matching `prompting-guides/*.md` for prompt style.
+3. Read `reference-implementations.md` for the node map and patch pattern.
+4. Run `python3 scripts/api_lib.py` (or import from your own code) to talk to ComfyUI.
+
+No agent-specific API keys, no platform lock-in, no vendor handshake. The skill talks to ComfyUI over plain HTTP and WebSocket.
+
+---
+
+## Bring your own workflows
+
+The `demo-workflows/` folder is **just a starting point** — three example graphs (FLUX 2 image edit, FLUX 2 T2I, LTX 2.3 video) that happen to work on one specific install. They will not match your node set, your model filenames, or your custom nodes.
+
+**The skill works with any ComfyUI workflow you have.** A few of the things the included reference docs cover:
+
+- ✅ Any checkpoint loader (`CheckpointLoaderSimple`, `UNETLoader`, dual-file loaders, community wrappers)
+- ✅ Any text encoder / CLIP loader pair
+- ✅ Any VAE loader
+- ✅ Any image / video / audio output node (`SaveImage`, `ttN imageOutput`, `VHS_VideoCombine`, `SaveVideo`, custom save nodes)
+- ✅ Any custom node pack installed on the target machine
+
+**We strongly encourage you to bring your own workflows.** Export any workflow from your ComfyUI in API format (`Menu → Workflow → Export (API)`), then ask your agent:
+
+> "I have a custom ComfyUI workflow at `/path/to/my_workflow.json`. Help me use it through this skill."
+
+The agent will:
+1. Read your workflow's API JSON
+2. Discover what nodes, models, and encoders it depends on via `/object_info`
+3. Add a node map to `reference-implementations.md` (or a new file) describing which nodes to patch per job
+4. Wire it into a batch script using the same `scripts/api_lib.py` patterns
+5. Hand back a working end-to-end loop
+
+This is the loop the skill is built around: **discover → patch → queue → block → verify**, on any graph, with any model, on any install.
+
+---
+
 ## When to use this
 
 **Great fit if you…**
@@ -200,7 +254,7 @@ The official CLI is excellent for install and lifecycle. The REST/WS API fills i
 | ✅ | **Image generation** | FLUX 2 T2I, FLUX 2 I2I/edit |
 | ✅ | **Video generation** | LTX 2.3 I2V/T2V, WAN 2.2 (T2V, I2V, Animate), Hunyuan T2V |
 | ✅ | **Batch orchestration** | queue-and-watch, state files, watchdog recovery, date-prefixed job folders |
-| ✅ | **Cron / monitoring** | Scheduler-agnostic SOP (OpenClaw, cron, systemd, launchd), progress templates, error recovery |
+| ✅ | **Cron / monitoring** | Scheduler-agnostic SOP (any cron, systemd, launchd, or OpenClaw), progress templates, error recovery |
 | ✅ | **JoyCaption pipeline** | Naming convention, format spec, LLM-driven prompt generation |
 | ✅ | **LoRA training** | Dataset structuring, training config, dynamic prompting, checkpoint management, deployment |
 | ✅ | **Production helper** | `scripts/api_lib.py` — persistent WS, thread-safe reconnect, env-var config |
@@ -329,7 +383,7 @@ comfyui-skill-public/
 └── LICENSE
 ```
 
-> Demo workflows are examples only and may depend on machine-specific nodes/models. See [demo-workflows/README.md](demo-workflows/README.md) before use.
+> **Demo workflows are just starting points.** They are tied to one specific ComfyUI install. **We strongly encourage you to bring your own workflows** — see [Bring your own workflows](#bring-your-own-workflows) above for how. [demo-workflows/README.md](demo-workflows/README.md) is the per-example breakdown.
 
 ---
 
