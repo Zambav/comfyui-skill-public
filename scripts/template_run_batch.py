@@ -67,9 +67,9 @@ COMFYUI_WS   = os.environ.get("COMFYUI_WS",   DEFAULT_WS)
 # ComfyUI's input/ directory -- where the workflow's LoadImage node will read from.
 # REQUIRED: set this to your ComfyUI install's input/ folder.
 # Examples:
-#   Windows:  C:/ComfyUI/ComfyUI_Windows_portable/ComfyUI/input
-#   Linux:    /home/you/ComfyUI/input
-#   macOS:    /Users/you/ComfyUI/input
+#   Windows:  C:\path\to\ComfyUI\input
+#   Linux:    /opt/ComfyUI/input
+#   macOS:    /opt/ComfyUI/input
 COMFYUI_INPUT_DIR = os.environ.get("COMFYUI_INPUT_DIR", "")
 
 # Base workflow JSON to load. Use a path the user supplies, never an absolute

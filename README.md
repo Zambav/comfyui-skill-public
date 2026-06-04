@@ -36,10 +36,10 @@ Stop hand-editing JSON workflows. Tell your agent what you want, and it builds t
 ```text
 You:    "batch this entire image folder into cinematic portraits and pick good prompts"
 Agent:  "Where are the photos? Where should outputs go? What should I call this batch?"
-You:    "D:/photos/portraits, D:/photos/portraits/cinematic, 'portraits_v1'"
+You:    "/path/to/photos/portraits, /path/to/photos/portraits/cinematic, 'portraits_v1'"
 Agent:  "47 images found. Running FLUX 2 image edit, one prompt, randomized seed."
          [.. 47 jobs queued, each one blocks on completion, each one verified with /history ..]
-Agent:  "Done. 47/47 OK. Output: D:/photos/portraits/cinematic/batch_01/"
+Agent:  "Done. 47/47 OK. Output: /path/to/photos/portraits/cinematic/batch_01/"
 ```
 
 No JSON editing. No fire-and-forget queueing. No silent failures. Just: describe it, run it, get the files.
@@ -89,7 +89,7 @@ Every trigger goes through the same proven execution path (see [Why this works](
 
 Real session, abbreviated. The agent follows the patterns in `scripts/api_lib.py` and `reference-implementations.md`.
 
-**User:** *"Take everything in D:/renders/sci-fi and turn it into a moody cyberpunk cinematic. Use one good prompt. Output to D:/renders/sci-fi/cinematic."*
+**User:** *"Take everything in /path/to/renders/sci-fi and turn it into a moody cyberpunk cinematic. Use one good prompt. Output to /path/to/renders/sci-fi/cinematic."*
 
 **Agent does, silently:**
 
@@ -105,8 +105,8 @@ from api_lib import load_workflow
 import copy
 wf = copy.deepcopy(load_workflow("workflows/flux_2_i2i.json"))
 wf["6"]["inputs"]["text"]    = "moody cyberpunk cinematic, neon rim light, volumetric fog"
-wf["198"]["inputs"]["image"] = copy_to_comfyui_input("D:/renders/sci-fi/shot_001.png")
-wf["225"]["inputs"]["output_path"] = "D:/renders/sci-fi/cinematic/batch_01"
+wf["198"]["inputs"]["image"] = copy_to_comfyui_input("/path/to/renders/sci-fi/shot_001.png")
+wf["225"]["inputs"]["output_path"] = "/path/to/renders/sci-fi/cinematic/batch_01"
 
 # 3. Queue, block on completion, verify with /history
 from api_lib import queue_prompt, wait_for_completion
@@ -119,7 +119,7 @@ job = wait_for_completion(prompt_id, ws=ws, host="http://127.0.0.1:8188")
 # -> "OK: shot_001.png"  (only after the server confirms success, not just submission)
 ```
 
-The same loop runs 23 times. The agent reports: *"23/23 OK. Output: D:/renders/sci-fi/cinematic/batch_01/"*.
+The same loop runs 23 times. The agent reports: *"23/23 OK. Output: /path/to/renders/sci-fi/cinematic/batch_01/"*.
 
 ---
 

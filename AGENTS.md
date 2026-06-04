@@ -69,7 +69,7 @@ When the user gives an install, you can skip step 2 and proceed.
    and load the copy. This is enforced in the reference `api_lib.py` patterns.
 2. **Never assume absolute paths.** All paths come from the user, from
    `/object_info` discovery, or from environment variables. If you find
-   yourself about to write a path like `C:\Users\<someone>\...`, stop and ask
+   yourself about to write a path like `/absolute/path/to/users/dir/...`, stop and ask
    the user.
 3. **Never assume a model filename is available.** Always confirm via
    `/object_info` or by listing the relevant model folder on the target install.
