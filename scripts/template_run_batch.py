@@ -68,8 +68,8 @@ COMFYUI_WS   = os.environ.get("COMFYUI_WS",   DEFAULT_WS)
 # REQUIRED: set this to your ComfyUI install's input/ folder.
 # Examples:
 #   Windows:  C:/path/to/ComfyUI/input
-#   Linux:    /opt/ComfyUI/input
-#   macOS:    /opt/ComfyUI/input
+#   Linux:    /home/user/ComfyUI/input
+#   macOS:    /Users/user/ComfyUI/input
 COMFYUI_INPUT_DIR = os.environ.get("COMFYUI_INPUT_DIR", "")
 
 # Base workflow JSON to load. Use a path the user supplies, never an absolute
